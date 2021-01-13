@@ -127,7 +127,7 @@ func (m *Method) addIn(name, description string, t interface{}, required bool, i
 	if m == nil {
 		return nil
 	}
-	m.Parameters.Append(NewParameter(name, description, t, required, inType))
+	m.Parameters = append(m.Parameters, NewParameter(name, description, t, required, inType))
 	return m
 }
 

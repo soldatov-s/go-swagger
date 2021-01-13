@@ -52,8 +52,3 @@ func (p *Parameter) GetType() reflect.Kind {
 }
 
 type ArrayParameters []*Parameter
-
-// nolint : ineffectual assignment
-func (ap ArrayParameters) Append(p *Parameter) {
-	ap = append(ap, p)
-}
