@@ -1,3 +1,6 @@
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/soldatov-s/go-swagger?status.svg)](https://pkg.go.dev/github.com/soldatov-s/go-swagger)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 # go-swagger
 
 Create Swagger (OpenAPI 2.0) descriptions via code helpers.
