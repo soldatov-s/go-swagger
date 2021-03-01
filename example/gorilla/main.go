@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"time"
@@ -33,6 +34,8 @@ func buildsrv1() {
 	router1v2 := router1.PathPrefix("/api/v2").Subrouter()
 	router1v2.HandleFunc("/test", testGetHandler).Methods("GET")
 	router1v2.HandleFunc("/test", testPostHandler).Methods("POST")
+	router1v2.HandleFunc("/testfile", testPostFileHandler).Methods("POST")
+	router1v2.HandleFunc("/testfile", testGetFileHandler).Methods("GET")
 	router1v2.HandleFunc("/testWithoutSwagger", testWithoutSwaggerGetHandler).Methods("GET")
 	router1v2.HandleFunc("/testArrayOfStruct", testArrayOfStructGetHandler).Methods("GET")
 
@@ -364,6 +367,67 @@ func testPostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func testPostFileHandler(w http.ResponseWriter, r *http.Request) {
+	// Swagger
+	if gorillaSwagger.IsBuildingSwagger(r) {
+		gorillaSwagger.AddToSwagger(r).
+			SetConsumes("multipart/form-data").
+			SetDescription("Test PostFileHandler").
+			SetSummary("Test simply POST file handler").
+			AddInFileParameter("uploadFile", "Upload file").
+			AddResponse(http.StatusOK, "Test", &TestStruct{})
+
+		return
+	}
+
+	// Main code of handler
+	err := r.ParseMultipartForm(32 << 20)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fileName := ""
+	for _, fileHeaders := range r.MultipartForm.File {
+		for _, fileHeader := range fileHeaders {
+			fileName = fileHeader.Filename
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	jData, err := json.Marshal(&TestStruct{Name: fileName, Conter: 1, Time: time.Now()})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = w.Write(jData)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func testGetFileHandler(w http.ResponseWriter, r *http.Request) {
+	// Swagger
+	if gorillaSwagger.IsBuildingSwagger(r) {
+		gorillaSwagger.AddToSwagger(r).
+			SetProduces("multipart/form-data").
+			SetDescription("Test GetFileHandler").
+			SetSummary("Test simply GET file handler").
+			AddFileResponse(http.StatusOK, "Test get file")
+
+		return
+	}
+
+	f, err := os.Open("./testfile.txt")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+
+	fi, _ := f.Stat()
+	http.ServeContent(w, r, fi.Name(), fi.ModTime(), f)
 }
 
 func testWithoutSwaggerGetHandler(w http.ResponseWriter, r *http.Request) {

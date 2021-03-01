@@ -25,7 +25,9 @@ func (r *Response) GetSchema() *Schema {
 }
 
 func (r *Response) SetTypeName(typeName string) {
-	r.TypeName = typeName
+	if r.TypeName == "" {
+		r.TypeName = typeName
+	}
 }
 
 func (r *Response) GetType() reflect.Kind {
@@ -33,7 +35,9 @@ func (r *Response) GetType() reflect.Kind {
 }
 
 func (r *Response) SetFormat(format string) {
-	r.Format = format
+	if r.Format == "" {
+		r.Format = format
+	}
 }
 
 type MapResponse map[string]*Response

@@ -80,7 +80,9 @@ func ParseRootType(obj Schemater, sw Doc) {
 	}
 
 	// Parse Schema when it is reflect.Kind type
-	obj.GetSchema().TypeName, obj.GetSchema().Format = ParseKind(value)
+	TypeName, Format := ParseKind(value)
+	obj.SetTypeName(TypeName)
+	obj.SetFormat(Format)
 }
 
 // ParseKind parse simple types and return it TypeName and Format

@@ -32,6 +32,8 @@ func buildsrv1() {
 	srv1v2 := srv1.Group("/api/v2")
 	srv1v2.GET("/test", testGetHandler)
 	srv1v2.POST("/test", testPostHandler)
+	srv1v2.POST("/testfile", testPostFileHandler)
+	srv1v2.GET("/testfile", testGetFileHandler)
 	srv1v2.GET("/testWithoutSwagger", testWithoutSwaggerGetHandler)
 	srv1v2.GET("/testArrayOfStruct", testArrayOfStructGetHandler)
 
@@ -307,6 +309,50 @@ func testPostHandler(ec echo.Context) error {
 	}
 
 	return ec.JSON(http.StatusOK, TestStructWithInterfaceField{Str: test.Name, InterfaceField: TestStructWithInterfaceField{}})
+}
+
+func testPostFileHandler(ec echo.Context) error {
+	// Swagger
+	if echoSwagger.IsBuildingSwagger(ec) {
+		echoSwagger.AddToSwagger(ec).
+			SetConsumes("multipart/form-data").
+			SetDescription("Test PostFileHandler").
+			SetSummary("Test simply POST file handler").
+			AddInFileParameter("uploadFile", "Upload file").
+			AddResponse(http.StatusOK, "Test", &TestStruct{})
+
+		return nil
+	}
+
+	// Main code of handler
+	multipartForm, err := ec.MultipartForm()
+	if err != nil {
+		return err
+	}
+
+	fileName := ""
+	for _, fileHeaders := range multipartForm.File {
+		for _, fileHeader := range fileHeaders {
+			fileName = fileHeader.Filename
+		}
+	}
+
+	return ec.JSON(http.StatusOK, TestStruct{Name: fileName, Conter: 1, Time: time.Now()})
+}
+
+func testGetFileHandler(ec echo.Context) error {
+	// Swagger
+	if echoSwagger.IsBuildingSwagger(ec) {
+		echoSwagger.AddToSwagger(ec).
+			SetProduces("multipart/form-data").
+			SetDescription("Test GetFileHandler").
+			SetSummary("Test simply GET file handler").
+			AddFileResponse(http.StatusOK, "Test get file")
+
+		return nil
+	}
+
+	return ec.File("./testfile.txt")
 }
 
 func testWithoutSwaggerGetHandler(ec echo.Context) error {

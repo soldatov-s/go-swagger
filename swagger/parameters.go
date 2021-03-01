@@ -12,6 +12,7 @@ const (
 	InPath   InType = "path"
 	InHeader InType = "header"
 	InCookie InType = "cookie"
+	InFile   InType = "formData"
 )
 
 type Parameter struct {
@@ -30,6 +31,18 @@ func NewParameter(name, description string, t interface{}, required bool, inType
 	}
 }
 
+func NewFileParameter(name, description string) *Parameter {
+	return &Parameter{
+		BaseObject: &BaseObject{
+			Name:        name,
+			Description: description,
+			TypeName:    "file",
+		},
+		Req: true,
+		IN:  InFile,
+	}
+}
+
 // Parse a parameter structure for JSON generation
 func (p *Parameter) Parse(sw Doc) {
 	ParseRootType(p, sw)
@@ -40,11 +53,15 @@ func (p *Parameter) GetSchema() *Schema {
 }
 
 func (p *Parameter) SetTypeName(typeName string) {
-	p.TypeName = typeName
+	if p.TypeName == "" {
+		p.TypeName = typeName
+	}
 }
 
 func (p *Parameter) SetFormat(format string) {
-	p.Format = format
+	if p.Format == "" {
+		p.Format = format
+	}
 }
 
 func (p *Parameter) GetType() reflect.Kind {

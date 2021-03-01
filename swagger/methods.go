@@ -33,11 +33,15 @@ type IMethod interface {
 	SetProduces(p ...string) Consumer
 	// AddResponse - adds a response
 	AddResponse(сode int, description string, schema interface{}) Responser
+	// AddFileParameter - adds a file response
+	AddFileResponse(responseCode int, description string) Responser
 }
 
 type Responser interface {
 	// AddParameter - adds a response
 	AddResponse(сode int, description string, schema interface{}) Responser
+	// AddFileParameter - adds a file response
+	AddFileResponse(responseCode int, description string) Responser
 }
 
 type AdderInParameter interface {
@@ -47,14 +51,18 @@ type AdderInParameter interface {
 	AddInQueryParameter(name, description string, t reflect.Kind, required bool) AdderInParameter
 	// AddInHeaderParameter - adds a request in header parameter
 	AddInHeaderParameter(name, description string, t reflect.Kind, required bool) AdderInParameter
-	// AddInCookieParameter - adds a request in header parameter
+	// AddInCookieParameter - adds a request in cookie parameter
 	AddInCookieParameter(name, description string, t reflect.Kind, required bool) AdderInParameter
+	// AddInFileParameter - adds a request in file parameter
+	AddInFileParameter(name, description string) AdderInParameter
 	Responser
 }
 
 type ParameterAndResponser interface {
 	// AddParameter - adds a response
 	AddResponse(Code int, description string, schema interface{}) Responser
+	// AddFileParameter - adds a file response
+	AddFileResponse(responseCode int, description string) Responser
 	// AddInBodyParameter - adds a request in body parameter
 	AddInBodyParameter(name, description string, t interface{}, required bool) AdderInParameter
 	// AddInPathParameter - adds a request in path parameter
@@ -63,8 +71,10 @@ type ParameterAndResponser interface {
 	AddInQueryParameter(name, description string, t reflect.Kind, required bool) AdderInParameter
 	// AddInHeaderParameter - adds a request in header parameter
 	AddInHeaderParameter(name, description string, t reflect.Kind, required bool) AdderInParameter
-	// AddInCookieParameter - adds a request in header parameter
+	// AddInCookieParameter - adds a request in cookie parameter
 	AddInCookieParameter(name, description string, t reflect.Kind, required bool) AdderInParameter
+	// AddInFileParameter - adds a request in file parameter
+	AddInFileParameter(name, description string) AdderInParameter
 }
 
 type Summarer interface {
@@ -151,6 +161,14 @@ func (m *Method) AddInBodyParameter(name, description string, t interface{}, req
 	return m.addIn(name, description, t, required, InBody)
 }
 
+func (m *Method) AddInFileParameter(name, description string) AdderInParameter {
+	if m == nil {
+		return nil
+	}
+	m.Parameters = append(m.Parameters, NewFileParameter(name, description))
+	return m
+}
+
 func (m *Method) AddResponse(responseCode int, description string, schema interface{}) Responser {
 	if m == nil {
 		return nil
@@ -162,6 +180,24 @@ func (m *Method) AddResponse(responseCode int, description string, schema interf
 
 	if schema != nil {
 		response.Schema = NewSchema(schema)
+	}
+
+	m.Responses[m.ResponseCode.Append(responseCode)] = response
+
+	return m
+}
+
+func (m *Method) AddFileResponse(responseCode int, description string) Responser {
+	if m == nil {
+		return nil
+	}
+	if m.Responses == nil {
+		m.Responses = make(map[string]*Response)
+	}
+	response := NewResponse(description)
+
+	response.Schema = &Schema{
+		TypeName: "file",
 	}
 
 	m.Responses[m.ResponseCode.Append(responseCode)] = response
